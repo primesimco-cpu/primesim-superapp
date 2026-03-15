@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>primesim — The Future of Connection</title>
 <meta name="description" content="PrimeSIM — 130+ ülkede anında eSIM. Fiziksel SIM kart olmadan dünyayı keşfet.">
 <meta property="og:title" content="primesim — The Future of Connection">
@@ -499,7 +499,7 @@ body[data-lang="tr"] .l-tr,body[data-lang="en"] .l-en,body[data-lang="de"] .l-de
         </div>
         <div class="s-inp">
           <span>🔍</span>
-          <input id="csearch" placeholder="Search country or region..." oninput="filterC(this.value)">
+          <input id="csearch" placeholder="Search country or region..." oninput="filterCountries(this.value)">
         </div>
         <div class="pop-lbl" id="pop-lbl">Popular</div>
         <div id="clist"></div>
@@ -576,14 +576,14 @@ body[data-lang="tr"] .l-tr,body[data-lang="en"] .l-en,body[data-lang="de"] .l-de
     <div class="pricing-grid">
       <div class="price-card">
         <div class="price-n">Starter</div>
-        <div class="price-v">$99<span>/mo</span></div>
+        <div class="price-v" style="font-size:20px;padding:12px 0">Contact Us</div>
         <ul class="price-list"><li>10 eSIM/mo</li><li>Basic dashboard</li><li>Email support</li><li>API access</li><li>AI chatbot</li></ul>
         <button class="btn btn-ghost" style="width:100%"><span class="l-tr">Başla</span><span class="l-en">Get started</span><span class="l-de">Loslegen</span><span class="l-fr">Commencer</span><span class="l-es">Empezar</span></button>
       </div>
       <div class="price-card pop">
         <div class="pop-b">Most Popular</div>
         <div class="price-n">Business</div>
-        <div class="price-v">$299<span>/mo</span></div>
+        <div class="price-v" style="font-size:20px;padding:12px 0">Contact Us</div>
         <ul class="price-list"><li>Unlimited eSIMs</li><li>Advanced analytics</li><li>Priority support</li><li>Full API</li><li>White-label option</li><li>Custom pricing</li></ul>
         <button class="btn btn-a" style="width:100%"><span class="l-tr">Başla</span><span class="l-en">Get started</span><span class="l-de">Loslegen</span><span class="l-fr">Commencer</span><span class="l-es">Empezar</span></button>
       </div>
@@ -898,19 +898,10 @@ function toggleLang(e){
 document.addEventListener('click',()=>document.getElementById('lang-wrap').classList.remove('open'));
 
 /* ── PLAN CARDS ── */
-function pCard(p){
-  return`<div class="p-card${p.feat?' feat':''}" onclick="buyPlan(${p.id})">
-    ${p.feat?'<div class="p-badge">Top Pick</div>':''}
-    <div class="p-flag">${p.f}</div>
-    <div class="p-cn">${p.c}</div>
-    <div class="p-pv">📡 ${p.pv}</div>
-    <div class="p-chips"><span class="chip chip-d">📶 ${p.d}</span><span class="chip chip-t">⏱ ${p.t}d</span><span class="chip chip-s">⚡${p.s}</span></div>
-    <div class="p-bot"><div class="p-price">$${p.p}<span> USD</span></div><button class="buy-btn" onclick="event.stopPropagation();buyPlan(${p.id})">Buy</button></div>
-  </div>`;
-}
 function renderFeat(){document.getElementById('feat-grid').innerHTML=PLANS.filter(p=>p.feat).map(pCard).join('')}
 function renderPlans(list){document.getElementById('plans-grid').innerHTML=list.map(pCard).join('')}
 function fp(r,btn){document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderPlans(r==='all'?PLANS:PLANS.filter(p=>p.r===r))}
+function filterCountries(q){ filterC(q); }
 function filterC(q){
   const el=document.getElementById('clist');
   if(!q){el.innerHTML=POPS.map(c=>`<span class="c-pill" onclick="srchC('${c}')">${c}</span>`).join('');return;}
@@ -1002,8 +993,16 @@ function renderBlog(){
 }
 
 /* ── AUTH ── */
-function openAuth(mode){document.getElementById('auth-modal').classList.add('open');authTab(mode)}
-function closeAuth(){document.getElementById('auth-modal').classList.remove('open')}
+function openAuth(mode){
+  const overlay = document.getElementById('auth-overlay') || document.getElementById('auth-modal');
+  if(overlay) overlay.classList.add('open');
+  if(typeof switchAuthTab === 'function') switchAuthTab(mode || 'login');
+  else if(typeof authTab === 'function') authTab(mode || 'login');
+}
+function closeAuth(){
+  const overlay = document.getElementById('auth-overlay') || document.getElementById('auth-modal');
+  if(overlay) overlay.classList.remove('open');
+}
 function authTab(t){
   document.getElementById('at-login').classList.toggle('on',t==='login');
   document.getElementById('at-reg').classList.toggle('on',t==='register');
@@ -1011,8 +1010,95 @@ function authTab(t){
   document.getElementById('forgot-row').style.display=t==='login'?'block':'none';
   document.getElementById('auth-submit').innerHTML=t==='login'?'<span class="l-tr">Giriş Yap</span><span class="l-en">Log In</span><span class="l-de">Anmelden</span><span class="l-fr">Connexion</span><span class="l-es">Entrar</span>':'<span class="l-tr">Kayıt Ol</span><span class="l-en">Sign Up</span><span class="l-de">Registrieren</span><span class="l-fr">S\'inscrire</span><span class="l-es">Registrarse</span>';
 }
-function doAuth(){toast('✓ Welcome to PrimeSIM!');closeAuth()}
-function socialAuth(p){toast('Redirecting to '+p+'... (OAuth integration coming)');setTimeout(closeAuth,1200)}
+
+function businessContact(){
+  openAuth('login');
+  toast('Our team will contact you within 24 hours for business pricing.');
+}
+function doAuth(){
+  const email = document.getElementById('auth-email')?.value?.trim();
+  const pass = document.getElementById('auth-pass')?.value;
+  const mode = document.getElementById('auth-tab-login')?.classList.contains('on') ? 'login' : 'register';
+  
+  if(!email || !email.includes('@')){ showAuthError('Please enter a valid email address'); return; }
+  if(!pass || pass.length < 8){ showAuthError('Password must be at least 8 characters'); return; }
+  
+  const btn = document.getElementById('auth-submit');
+  btn.textContent = 'Please wait...';
+  btn.disabled = true;
+  
+  // Simulate API call - replace with real NextAuth/Supabase call
+  setTimeout(() => {
+    btn.disabled = false;
+    closeAuth();
+    currentUser = { email, name: email.split('@')[0] };
+    updateUserUI();
+    const msg = mode === 'login' ? '✓ Welcome back!' : '✓ Account created! Welcome to PrimeSIM 💎';
+    toast(msg);
+    // Add 5% welcome PrimeMoney for new users
+    if(mode === 'register') addPrimeMoney && addPrimeMoney(0, true);
+  }, 1200);
+}
+
+function showAuthError(msg){
+  let err = document.getElementById('auth-error');
+  if(!err){
+    err = document.createElement('div');
+    err.id = 'auth-error';
+    err.style.cssText = 'background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#dc2626;font-size:12px;padding:9px 12px;border-radius:8px;margin-bottom:10px';
+    const modal = document.querySelector('.modal');
+    const firstField = modal?.querySelector('.form-field');
+    if(firstField) modal.insertBefore(err, firstField);
+  }
+  err.textContent = msg;
+  err.style.display = 'block';
+  setTimeout(() => err.style.display = 'none', 4000);
+}
+
+let currentUser = null;
+function updateUserUI(){
+  const loginBtn = document.querySelector('.btn-ghost.btn-sm[onclick*="openAuth"]');
+  if(loginBtn && currentUser){
+    loginBtn.textContent = currentUser.name.charAt(0).toUpperCase() + currentUser.name.slice(1,8);
+    loginBtn.style.background = 'var(--a3)';
+    loginBtn.style.borderColor = 'var(--a)';
+    loginBtn.style.color = 'var(--p)';
+    loginBtn.onclick = () => goTo('wallet');
+  }
+}
+
+function socialLogin(provider){
+  const popup = window.open('', '_blank', 'width=500,height=600');
+  if(popup) popup.document.write('<html><body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f5f5f5"><div style="text-align:center;background:white;padding:40px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.1)"><div style="font-size:32px;margin-bottom:16px">' + (provider==='google'?'G':'🍎') + '</div><h2 style="margin-bottom:8px">Sign in with ' + provider.charAt(0).toUpperCase()+provider.slice(1) + '</h2><p style="color:#666;font-size:14px">Redirecting to ' + provider + ' authentication...</p><p style="color:#666;font-size:12px;margin-top:16px">Connect Google/Apple OAuth credentials in Settings → Auth to activate.</p></div><script>
+// goTo override
+(function(){
+var orig = window.goTo || function(){};
+window.goTo = function(s){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('on'));
+  var sc=document.getElementById('sc-'+s);
+  if(sc) sc.classList.add('on');
+  document.querySelectorAll('.bn-btn').forEach(b=>b.classList.remove('on'));
+  var bn=document.getElementById('bn-'+s);if(bn)bn.classList.add('on');
+  document.querySelectorAll('.nav-btn').forEach(a=>a.classList.toggle('on',a.getAttribute('data-page')===s));
+  window.scrollTo(0,0);
+  if(s==='loyalty'&&typeof renderLoyalty==='function')renderLoyalty();
+  if(s==='help'&&typeof renderHelp==='function')renderHelp();
+  if(s==='setup'&&typeof renderSetupGuide==='function')renderSetupGuide();
+  if(s==='checkout'){setTimeout(function(){typeof enhanceCheckout==='function'&&enhanceCheckout();typeof updateCheckoutPM==='function'&&updateCheckoutPM();},100);}
+};
+})();
+</script>
+</body></html>');
+  
+  setTimeout(() => {
+    if(popup && !popup.closed) popup.close();
+    currentUser = { email: 'user@primesim.co', name: 'Traveler' };
+    updateUserUI();
+    closeAuth();
+    toast('✓ Signed in with ' + provider.charAt(0).toUpperCase()+provider.slice(1) + '!');
+  }, 2500);
+}
+// socialLogin already defined above
 
 /* ── CHAT ── */
 const chatReplies={
@@ -1075,6 +1161,858 @@ function init(){
   renderCampaigns();renderBlog();
 }
 init();
+// Run after DOM fully loaded
+setTimeout(function(){
+  if(typeof initNewFeatures === 'function') initNewFeatures();
+  if(typeof initCurrencySelector === 'function') initCurrencySelector();
+  if(typeof addNavItems === 'function') addNavItems();
+  if(typeof addBottomNavLoyalty === 'function') addBottomNavLoyalty();
+}, 200);
+</script>
+
+<style>
+/* NEW SCREEN CLASSES */
+.sec{ } /* already exists */
+.plan-card{ } /* compatibility */
+.plan-flag{font-size:32px;margin-bottom:10px}
+.plan-country{font-family:var(--fh);font-size:16px;font-weight:800;color:var(--p);margin-bottom:2px}
+.plan-provider{font-size:10px;color:var(--ink3);margin-bottom:12px}
+.plan-chips{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap}
+.chip{border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700}
+.chip-data{background:#E8F4FF;color:#0066BB}
+.chip-days{background:#FFF0E8;color:#C45800}
+.chip-speed{background:var(--a3);color:#006B55}
+.plan-footer{display:flex;align-items:center;justify-content:space-between}
+.plan-price{font-family:var(--fh);font-size:22px;font-weight:900;color:var(--p)}
+.plan-price span{font-size:12px;font-weight:400;color:var(--ink3)}
+.plan-badge{position:absolute;top:-10px;left:14px;background:var(--a);color:var(--p);font-size:9px;font-weight:900;padding:3px 10px;border-radius:99px;text-transform:uppercase}
+.buy-btn{background:var(--p);color:white;border:none;border-radius:99px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:var(--fb)}
+.buy-btn:hover{background:var(--a);color:var(--p)}
+</style>
+<!-- ═══════════════════════════════════════════════════════
+     PRIMESIM MASTER ADDITIONS — Airalo'dan üstün özellikler
+     Eklenecekler: Loyalty, Currency, Referral, Help, Setup
+═══════════════════════════════════════════════════════ -->
+
+<!-- YENI EKRANLAR -->
+
+<!-- LOYALTY PROGRAM -->
+<div id="sc-loyalty" class="screen">
+  <div class="sec">
+    <div style="text-align:center;margin-bottom:36px">
+      <div style="font-size:48px;margin-bottom:12px">💎</div>
+      <h2 style="font-family:var(--fh);font-size:32px;font-weight:900;letter-spacing:-1.5px;margin-bottom:10px"><span class="l-tr">PrimeMoney Loyalty</span><span class="l-en">PrimeMoney Loyalty</span><span class="l-de">PrimeMoney Treue</span><span class="l-fr">PrimeMoney Fidélité</span><span class="l-es">PrimeMoney Lealtad</span></h2>
+      <p style="color:var(--ink2);font-size:15px;max-width:500px;margin:0 auto">
+        <span class="l-tr">Her alışverişte PrimeMoney kazan. Biriktir, indirimi kullan.</span>
+        <span class="l-en">Earn PrimeMoney on every purchase. Save and use for discounts.</span>
+        <span class="l-de">Verdiene PrimeMoney bei jedem Kauf. Spare und nutze Rabatte.</span>
+        <span class="l-fr">Gagnez des PrimeMoney à chaque achat. Économisez et utilisez pour des réductions.</span>
+        <span class="l-es">Gana PrimeMoney en cada compra. Ahorra y úsalo para descuentos.</span>
+      </p>
+    </div>
+
+    <!-- LOYALTY TIERS -->
+    <div id="loyalty-tiers" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:36px"></div>
+
+    <!-- USER LOYALTY CARD -->
+    <div id="loyalty-user-card" style="background:linear-gradient(135deg,var(--p),#0d3a65);border-radius:22px;padding:28px;color:white;margin-bottom:28px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(0,200,150,.12)"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;position:relative">
+        <div>
+          <div style="font-size:11px;opacity:.6;margin-bottom:6px;font-weight:600">MY PRIMEMONEY BALANCE</div>
+          <div style="font-family:var(--fh);font-size:42px;font-weight:900;color:var(--a)" id="pm-balance">$0.00</div>
+          <div style="font-size:12px;opacity:.55;margin-top:4px" id="pm-tier-label">Traveler — 5% cashback</div>
+        </div>
+        <div style="text-align:right">
+          <div id="pm-badge" style="background:rgba(0,200,150,.2);border:1px solid rgba(0,200,150,.4);border-radius:10px;padding:10px 16px;text-align:center">
+            <div style="font-size:10px;opacity:.6;margin-bottom:3px">LEVEL</div>
+            <div style="font-family:var(--fh);font-size:16px;font-weight:900;color:var(--a)" id="pm-level">Traveler</div>
+          </div>
+          <div style="font-size:10px;opacity:.5;margin-top:7px" id="pm-next-level"></div>
+        </div>
+      </div>
+      <div style="margin-top:18px;background:rgba(255,255,255,.1);border-radius:10px;height:7px;overflow:hidden;position:relative">
+        <div id="pm-progress" style="height:100%;background:var(--a);border-radius:10px;transition:width .6s;width:0%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10px;opacity:.5" id="pm-progress-labels"></div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div style="background:white;border-radius:var(--r2);padding:24px;border:1.5px solid var(--b);margin-bottom:20px">
+      <h3 style="font-family:var(--fh);font-size:18px;font-weight:800;margin-bottom:18px">
+        <span class="l-tr">Nasıl Çalışır?</span><span class="l-en">How it works</span><span class="l-de">Wie es funktioniert</span><span class="l-fr">Comment ça marche</span><span class="l-es">Cómo funciona</span>
+      </h3>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px">
+        <div style="text-align:center">
+          <div style="font-size:32px;margin-bottom:10px">🛒</div>
+          <div style="font-weight:700;margin-bottom:5px"><span class="l-tr">eSIM Satın Al</span><span class="l-en">Buy eSIM</span><span class="l-de">eSIM kaufen</span><span class="l-fr">Acheter eSIM</span><span class="l-es">Comprar eSIM</span></div>
+          <div style="font-size:12px;color:var(--ink2)"><span class="l-tr">Her satın almada PrimeMoney kazanırsın</span><span class="l-en">Earn PrimeMoney on every purchase</span><span class="l-de">Verdiene PrimeMoney bei jedem Kauf</span><span class="l-fr">Gagnez des PrimeMoney à chaque achat</span><span class="l-es">Gana PrimeMoney en cada compra</span></div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:32px;margin-bottom:10px">📈</div>
+          <div style="font-weight:700;margin-bottom:5px"><span class="l-tr">Seviye Atla</span><span class="l-en">Level Up</span><span class="l-de">Level aufsteigen</span><span class="l-fr">Monter de niveau</span><span class="l-es">Sube de nivel</span></div>
+          <div style="font-size:12px;color:var(--ink2)"><span class="l-tr">Daha fazla harca, daha fazla kazan (%10'a kadar)</span><span class="l-en">Spend more, earn more (up to 10%)</span><span class="l-de">Mehr ausgeben, mehr verdienen (bis 10%)</span><span class="l-fr">Plus vous dépensez, plus vous gagnez (jusqu'à 10%)</span><span class="l-es">Gasta más, gana más (hasta 10%)</span></div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:32px;margin-bottom:10px">💰</div>
+          <div style="font-weight:700;margin-bottom:5px"><span class="l-tr">İndirim Kullan</span><span class="l-en">Redeem Savings</span><span class="l-de">Ersparnisse einlösen</span><span class="l-fr">Utiliser les économies</span><span class="l-es">Canjear ahorros</span></div>
+          <div style="font-size:12px;color:var(--ink2)"><span class="l-tr">Sonraki alışverişinde PrimeMoney ile öde</span><span class="l-en">Pay with PrimeMoney on next purchase</span><span class="l-de">Mit PrimeMoney beim nächsten Kauf zahlen</span><span class="l-fr">Payer avec PrimeMoney au prochain achat</span><span class="l-es">Paga con PrimeMoney en tu próxima compra</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center">
+      <button class="btn btn-a btn-lg" onclick="goTo('plans')">
+        <span class="l-tr">eSIM Al ve Kazan →</span><span class="l-en">Buy eSIM & Earn →</span><span class="l-de">eSIM kaufen & verdienen →</span><span class="l-fr">Acheter eSIM & gagner →</span><span class="l-es">Comprar eSIM & ganar →</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- REFERRAL PROGRAM -->
+<div id="sc-referral" class="screen">
+  <div class="sec">
+    <div style="background:linear-gradient(135deg,var(--p),#0d3a65);border-radius:22px;padding:36px;color:white;text-align:center;margin-bottom:24px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(0,200,150,.12)"></div>
+      <div style="font-size:48px;margin-bottom:12px;position:relative">🎁</div>
+      <h2 style="font-family:var(--fh);font-size:30px;font-weight:900;letter-spacing:-1.5px;margin-bottom:10px;position:relative">
+        <span class="l-tr">Arkadaşını Davet Et</span><span class="l-en">Refer & Earn</span><span class="l-de">Freunde werben</span><span class="l-fr">Parrainer & Gagner</span><span class="l-es">Referir & Ganar</span>
+      </h2>
+      <p style="opacity:.75;font-size:15px;margin-bottom:24px;position:relative;max-width:480px;margin-left:auto;margin-right:auto">
+        <span class="l-tr">Her davet ettiğin arkadaş için $3 PrimeMoney kazan. Arkadaşın ilk alışverişinde %15 indirim alır.</span>
+        <span class="l-en">Earn $3 PrimeMoney for every friend you invite. They get 15% off their first purchase.</span>
+        <span class="l-de">Verdiene $3 PrimeMoney für jeden eingeladenen Freund. Er erhält 15% Rabatt auf seinen ersten Kauf.</span>
+        <span class="l-fr">Gagnez 3$ PrimeMoney pour chaque ami invité. Il obtient 15% de réduction sur son premier achat.</span>
+        <span class="l-es">Gana $3 PrimeMoney por cada amigo invitado. Obtiene 15% de descuento en su primera compra.</span>
+      </p>
+      <div style="background:rgba(255,255,255,.12);border-radius:14px;padding:16px 22px;display:inline-flex;align-items:center;gap:14px;position:relative">
+        <div>
+          <div style="font-size:10px;opacity:.6;margin-bottom:4px">YOUR REFERRAL CODE</div>
+          <div style="font-family:monospace;font-size:22px;font-weight:900;letter-spacing:3px;color:var(--a)" id="ref-code">PRIME-XXXX</div>
+        </div>
+        <button onclick="copyRefCode()" style="background:var(--a);color:var(--p);border:none;border-radius:10px;padding:10px 16px;font-weight:800;font-size:12px;cursor:pointer">
+          <span class="l-tr">Kopyala</span><span class="l-en">Copy</span><span class="l-de">Kopieren</span><span class="l-fr">Copier</span><span class="l-es">Copiar</span>
+        </button>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;position:relative;flex-wrap:wrap">
+        <button onclick="shareRef('whatsapp')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:9px 16px;font-size:12px;font-weight:700;color:white;cursor:pointer">📱 WhatsApp</button>
+        <button onclick="shareRef('twitter')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:9px 16px;font-size:12px;font-weight:700;color:white;cursor:pointer">𝕏 Twitter/X</button>
+        <button onclick="shareRef('email')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:9px 16px;font-size:12px;font-weight:700;color:white;cursor:pointer">📧 Email</button>
+        <button onclick="shareRef('copy')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:9px 16px;font-size:12px;font-weight:700;color:white;cursor:pointer">🔗 <span class="l-tr">Link Kopyala</span><span class="l-en">Copy Link</span><span class="l-de">Link kopieren</span><span class="l-fr">Copier le lien</span><span class="l-es">Copiar enlace</span></button>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px">
+      <div style="background:white;border-radius:var(--r);padding:20px;border:1.5px solid var(--b);text-align:center">
+        <div style="font-family:var(--fh);font-size:28px;font-weight:900;color:var(--a)" id="ref-count">0</div>
+        <div style="font-size:12px;color:var(--ink2);margin-top:4px"><span class="l-tr">Toplam Davet</span><span class="l-en">Total Referrals</span><span class="l-de">Gesamtempfehlungen</span><span class="l-fr">Parrainages totaux</span><span class="l-es">Referencias totales</span></div>
+      </div>
+      <div style="background:white;border-radius:var(--r);padding:20px;border:1.5px solid var(--b);text-align:center">
+        <div style="font-family:var(--fh);font-size:28px;font-weight:900;color:var(--a)" id="ref-earned">$0.00</div>
+        <div style="font-size:12px;color:var(--ink2);margin-top:4px"><span class="l-tr">Kazanılan</span><span class="l-en">Total Earned</span><span class="l-de">Verdient</span><span class="l-fr">Total gagné</span><span class="l-es">Total ganado</span></div>
+      </div>
+      <div style="background:white;border-radius:var(--r);padding:20px;border:1.5px solid var(--b);text-align:center">
+        <div style="font-family:var(--fh);font-size:28px;font-weight:900;color:var(--a)" id="ref-pending">0</div>
+        <div style="font-size:12px;color:var(--ink2);margin-top:4px"><span class="l-tr">Bekleyen</span><span class="l-en">Pending</span><span class="l-de">Ausstehend</span><span class="l-fr">En attente</span><span class="l-es">Pendiente</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP GUIDE -->
+<div id="sc-setup" class="screen">
+  <div class="sec">
+    <div style="text-align:center;margin-bottom:28px">
+      <h2 style="font-family:var(--fh);font-size:28px;font-weight:900;letter-spacing:-1px;margin-bottom:8px">
+        <span class="l-tr">eSIM Kurulum Rehberi</span><span class="l-en">eSIM Installation Guide</span><span class="l-de">eSIM-Installationsanleitung</span><span class="l-fr">Guide d'installation eSIM</span><span class="l-es">Guía de instalación eSIM</span>
+      </h2>
+      <p style="color:var(--ink2);font-size:14px"><span class="l-tr">Cihazına göre kurulum yöntemini seç</span><span class="l-en">Choose installation method for your device</span><span class="l-de">Wähle die Installationsmethode für dein Gerät</span><span class="l-fr">Choisissez la méthode d'installation pour votre appareil</span><span class="l-es">Elige el método de instalación para tu dispositivo</span></p>
+    </div>
+
+    <!-- DEVICE TABS -->
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:24px">
+      <button id="setup-ios-btn" onclick="switchSetup('ios')" style="display:flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;background:var(--p);color:white;border:none;cursor:pointer;font-weight:700;font-size:13px;font-family:var(--fb)"> iOS</button>
+      <button id="setup-android-btn" onclick="switchSetup('android')" style="display:flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;background:white;color:var(--ink);border:1.5px solid var(--b);cursor:pointer;font-weight:700;font-size:13px;font-family:var(--fb)">▶ Android</button>
+    </div>
+
+    <!-- IOS SETUP -->
+    <div id="setup-ios">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+        <!-- QR Method -->
+        <div style="background:white;border-radius:var(--r2);padding:24px;border:1.5px solid var(--b)">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <div style="width:36px;height:36px;background:var(--a3);border-radius:9px;display:grid;place-items:center;font-size:18px">📷</div>
+            <div><div style="font-weight:800;font-size:15px">QR <span class="l-tr">Yöntemi</span><span class="l-en">Method</span><span class="l-de">Methode</span><span class="l-fr">Méthode</span><span class="l-es">Método</span></div><div style="font-size:11px;color:var(--ink3)">iOS 12+</div></div>
+          </div>
+          <div id="setup-ios-qr-steps"></div>
+        </div>
+        <!-- Push Method -->
+        <div style="background:white;border-radius:var(--r2);padding:24px;border:2px solid var(--a);position:relative">
+          <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--a);color:var(--p);font-size:10px;font-weight:900;padding:3px 14px;border-radius:99px;white-space:nowrap">✨ <span class="l-tr">En Hızlı</span><span class="l-en">Fastest</span><span class="l-de">Schnellste</span><span class="l-fr">Plus rapide</span><span class="l-es">Más rápido</span></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <div style="width:36px;height:36px;background:var(--a3);border-radius:9px;display:grid;place-items:center;font-size:18px">⚡</div>
+            <div><div style="font-weight:800;font-size:15px">Push <span class="l-tr">Kurulum</span><span class="l-en">Install</span><span class="l-de">Installation</span><span class="l-fr">Installation</span><span class="l-es">Instalación</span></div><div style="font-size:11px;color:var(--ink3)">iOS 17.4+</div></div>
+          </div>
+          <div id="setup-ios-push-steps"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANDROID SETUP -->
+    <div id="setup-android" style="display:none">
+      <div style="background:white;border-radius:var(--r2);padding:24px;border:1.5px solid var(--b);margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div style="width:36px;height:36px;background:var(--a3);border-radius:9px;display:grid;place-items:center;font-size:18px">▶</div>
+          <div style="font-weight:800;font-size:15px">Android <span class="l-tr">Kurulum</span><span class="l-en">Setup</span><span class="l-de">Einrichtung</span><span class="l-fr">Configuration</span><span class="l-es">Configuración</span></div>
+        </div>
+        <div id="setup-android-steps"></div>
+      </div>
+    </div>
+
+    <!-- COMPATIBILITY -->
+    <div style="background:linear-gradient(135deg,#f0fdf9,white);border-radius:var(--r2);padding:22px;border:1.5px solid rgba(0,200,150,.3)">
+      <h3 style="font-family:var(--fh);font-size:17px;font-weight:800;margin-bottom:12px">
+        🔍 <span class="l-tr">Cihaz Uyumluluğu</span><span class="l-en">Device Compatibility</span><span class="l-de">Gerätekompatibilität</span><span class="l-fr">Compatibilité des appareils</span><span class="l-es">Compatibilidad del dispositivo</span>
+      </h3>
+      <p style="font-size:13px;color:var(--ink2);margin-bottom:14px">
+        <span class="l-tr">eSIM kullanmak için cihazınızın şu koşulları sağlaması gerekir:</span>
+        <span class="l-en">Your device must meet the following conditions to use eSIM:</span>
+        <span class="l-de">Ihr Gerät muss folgende Bedingungen erfüllen, um eSIM zu nutzen:</span>
+        <span class="l-fr">Votre appareil doit remplir les conditions suivantes pour utiliser eSIM :</span>
+        <span class="l-es">Tu dispositivo debe cumplir las siguientes condiciones para usar eSIM:</span>
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="color:var(--a);font-weight:900">✓</span><span class="l-tr">eSIM destekleyen cihaz (iPhone XS+, Pixel 3+)</span><span class="l-en">eSIM compatible device (iPhone XS+, Pixel 3+)</span><span class="l-de">eSIM-kompatibles Gerät (iPhone XS+, Pixel 3+)</span><span class="l-fr">Appareil compatible eSIM (iPhone XS+, Pixel 3+)</span><span class="l-es">Dispositivo compatible con eSIM (iPhone XS+, Pixel 3+)</span></div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="color:var(--a);font-weight:900">✓</span><span class="l-tr">Operatör kilitli değil</span><span class="l-en">Not carrier locked</span><span class="l-de">Kein Netzsperren</span><span class="l-fr">Non verrouillé par opérateur</span><span class="l-es">Sin bloqueo de operador</span></div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="color:var(--a);font-weight:900">✓</span><span class="l-tr">Jailbreak/root yapılmamış</span><span class="l-en">Not jailbroken/rooted</span><span class="l-de">Nicht jailbreakt/gerootet</span><span class="l-fr">Non jailbreaké/rooté</span><span class="l-es">Sin jailbreak/root</span></div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="color:var(--a);font-weight:900">✓</span><span class="l-tr">İnternet bağlantısı (kurulum için)</span><span class="l-en">Internet connection (for installation)</span><span class="l-de">Internetverbindung (für Installation)</span><span class="l-fr">Connexion internet (pour installation)</span><span class="l-es">Conexión a internet (para instalación)</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HELP CENTER -->
+<div id="sc-help" class="screen">
+  <div class="sec">
+    <div style="text-align:center;margin-bottom:28px">
+      <h2 style="font-family:var(--fh);font-size:28px;font-weight:900;letter-spacing:-1px;margin-bottom:8px">
+        <span class="l-tr">Yardım Merkezi</span><span class="l-en">Help Center</span><span class="l-de">Hilfezentrum</span><span class="l-fr">Centre d'aide</span><span class="l-es">Centro de ayuda</span>
+      </h2>
+      <div style="background:var(--b3);border:1.5px solid var(--b);border-radius:12px;padding:12px 16px;max-width:400px;margin:0 auto;display:flex;align-items:center;gap:10px">
+        <span>🔍</span>
+        <input id="help-search" placeholder="Search help articles..." oninput="filterHelp(this.value)" style="background:none;border:none;outline:none;font-family:var(--fb);font-size:14px;width:100%;color:var(--ink)">
+      </div>
+    </div>
+
+    <div id="help-topics" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px"></div>
+
+    <div id="help-articles" style="background:white;border-radius:var(--r2);border:1.5px solid var(--b)"></div>
+
+    <div style="background:linear-gradient(135deg,var(--p),#0d3a65);border-radius:var(--r2);padding:24px;color:white;text-align:center;margin-top:18px">
+      <div style="font-family:var(--fh);font-size:18px;font-weight:800;margin-bottom:8px">
+        <span class="l-tr">Hâlâ yardıma mı ihtiyaç var?</span><span class="l-en">Still need help?</span><span class="l-de">Noch Hilfe nötig?</span><span class="l-fr">Vous avez encore besoin d'aide ?</span><span class="l-es">¿Todavía necesitas ayuda?</span>
+      </div>
+      <p style="opacity:.7;font-size:13px;margin-bottom:16px">
+        <span class="l-tr">7/24 AI chatbotumuz anında yanıt veriyor</span><span class="l-en">Our 24/7 AI chatbot answers instantly</span><span class="l-de">Unser 24/7 KI-Chatbot antwortet sofort</span><span class="l-fr">Notre chatbot IA 24/7 répond instantanément</span><span class="l-es">Nuestro chatbot IA 24/7 responde al instante</span>
+      </p>
+      <button class="btn btn-a" onclick="toggleChat()">
+        💬 <span class="l-tr">AI ile Konuş</span><span class="l-en">Chat with AI</span><span class="l-de">Mit KI chatten</span><span class="l-fr">Discuter avec l'IA</span><span class="l-es">Chatear con IA</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- YENI CSS EKLEMELERİ -->
+<style>
+/* Setup steps */
+.setup-step{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--p);color:white;display:grid;place-items:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px}
+.step-text{font-size:12px;color:var(--ink2);line-height:1.6}
+.step-text strong{color:var(--ink);font-weight:700}
+
+/* Currency selector */
+.currency-wrap{position:relative}
+.currency-btn{display:flex;align-items:center;gap:5px;background:none;border:1.5px solid var(--b2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;color:var(--ink);cursor:pointer;transition:border-color .15s;font-family:var(--fb)}
+.currency-btn:hover{border-color:var(--a)}
+.currency-dd{position:absolute;top:40px;right:0;background:white;border:1.5px solid var(--b2);border-radius:var(--r2);padding:7px;box-shadow:0 8px 40px rgba(0,0,0,.15);display:none;z-index:9999;width:220px;max-height:280px;overflow-y:auto}
+.currency-wrap.open .currency-dd{display:block}
+.curr-search{width:100%;background:var(--b3);border:1px solid var(--b);border-radius:7px;padding:7px 10px;font-size:12px;color:var(--ink);outline:none;margin-bottom:6px;font-family:var(--fb)}
+.curr-opt{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--ink)}
+.curr-opt:hover{background:var(--b3)}
+.curr-opt.on{background:var(--a3);color:var(--p)}
+.curr-code{font-weight:800;font-family:monospace;font-size:11px}
+
+/* Loyalty tiers */
+.tier-card{background:white;border-radius:var(--r);padding:18px;border:1.5px solid var(--b);text-align:center;transition:all .2s;position:relative;overflow:hidden}
+.tier-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+.tier-traveler::before{background:#8097A8}
+.tier-silver::before{background:linear-gradient(90deg,#C0C0C0,#E8E8E8)}
+.tier-gold::before{background:linear-gradient(90deg,#FFD700,#FFA500)}
+.tier-platinum::before{background:linear-gradient(90deg,#E5E4E2,#b5b5f5,#E5E4E2)}
+.tier-card.active{border-color:var(--a);box-shadow:0 6px 24px rgba(0,200,150,.12)}
+.tier-icon{font-size:28px;margin-bottom:8px}
+.tier-name{font-family:var(--fh);font-size:16px;font-weight:900;margin-bottom:5px}
+.tier-cashback{font-size:24px;font-weight:900;color:var(--a);margin-bottom:4px}
+.tier-req{font-size:11px;color:var(--ink3)}
+
+/* Help topics */
+.help-topic{background:white;border-radius:var(--r);padding:18px;border:1.5px solid var(--b);cursor:pointer;transition:all .2s}
+.help-topic:hover{border-color:var(--a);transform:translateY(-2px)}
+.help-topic-icon{font-size:24px;margin-bottom:8px}
+.help-topic-title{font-weight:700;font-size:14px;margin-bottom:4px}
+.help-topic-count{font-size:11px;color:var(--ink3)}
+
+/* FAQ accordion */
+.faq-item{border-bottom:1px solid var(--b)}
+.faq-q{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;font-size:13px;font-weight:600}
+.faq-q:hover{background:var(--b3)}
+.faq-a{padding:0 18px 14px;font-size:12px;color:var(--ink2);line-height:1.7;display:none}
+.faq-a.open{display:block}
+
+/* Notification dot on loyalty */
+.loyalty-dot{position:absolute;top:-3px;right:-3px;width:8px;height:8px;background:var(--o);border-radius:50%;border:2px solid white}
+</style>
+
+<!-- YENI JS EKLEMELERİ -->
+<script>
+/* ══════════════════════════════════════════════════
+   CURRENCY SYSTEM
+══════════════════════════════════════════════════ */
+const CURRENCIES = [
+  {code:'USD',symbol:'$',name:'US Dollar',rate:1},
+  {code:'EUR',symbol:'€',name:'Euro',rate:0.92},
+  {code:'TRY',symbol:'₺',name:'Turkish Lira',rate:32.4},
+  {code:'GBP',symbol:'£',name:'British Pound',rate:0.79},
+  {code:'JPY',symbol:'¥',name:'Japanese Yen',rate:151.2},
+  {code:'AED',symbol:'د.إ',name:'UAE Dirham',rate:3.67},
+  {code:'SAR',symbol:'ر.س',name:'Saudi Riyal',rate:3.75},
+  {code:'KRW',symbol:'₩',name:'Korean Won',rate:1340},
+  {code:'THB',symbol:'฿',name:'Thai Baht',rate:35.8},
+  {code:'CNY',symbol:'¥',name:'Chinese Yuan',rate:7.24},
+  {code:'AUD',symbol:'A$',name:'Australian Dollar',rate:1.55},
+  {code:'CAD',symbol:'C$',name:'Canadian Dollar',rate:1.37},
+  {code:'BRL',symbol:'R$',name:'Brazilian Real',rate:5.04},
+  {code:'MXN',symbol:'$',name:'Mexican Peso',rate:17.2},
+  {code:'INR',symbol:'₹',name:'Indian Rupee',rate:83.4},
+  {code:'PLN',symbol:'zł',name:'Polish Zloty',rate:3.98},
+  {code:'SEK',symbol:'kr',name:'Swedish Krona',rate:10.5},
+  {code:'NOK',symbol:'kr',name:'Norwegian Krone',rate:10.8},
+  {code:'DKK',symbol:'kr',name:'Danish Krone',rate:6.89},
+  {code:'CHF',symbol:'Fr',name:'Swiss Franc',rate:0.91},
+];
+let curCurrency = CURRENCIES[0];
+
+function initCurrencySelector(){
+  const nav = document.querySelector('.nav-r');
+  if(!nav || document.getElementById('curr-wrap')) return;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'currency-wrap';
+  wrap.id = 'curr-wrap';
+  wrap.innerHTML = `
+    <button class="currency-btn" onclick="toggleCurrency(event)" id="curr-btn">
+      <span id="curr-symbol">$</span>
+      <span id="curr-code-lbl" style="font-size:10px">USD</span>
+      <span style="font-size:8px;opacity:.4">▼</span>
+    </button>
+    <div class="currency-dd" id="curr-dd">
+      <input class="curr-search" placeholder="Search currency..." id="curr-search" oninput="filterCurr(this.value)">
+      <div id="curr-list"></div>
+    </div>`;
+  // Nav'ın ilk elemanı olarak ekle (dil seçiciden önce)
+  const langWrap = document.getElementById('langWrap');
+  if(langWrap) nav.insertBefore(wrap, langWrap);
+  else nav.prepend(wrap);
+
+  renderCurrList('');
+  document.addEventListener('click', e => {
+    if(!e.target.closest('#curr-wrap')) document.getElementById('curr-wrap')?.classList.remove('open');
+  });
+}
+
+function toggleCurrency(e){
+  e.stopPropagation();
+  document.getElementById('curr-wrap').classList.toggle('open');
+}
+
+function renderCurrList(q){
+  const list = document.getElementById('curr-list');
+  if(!list) return;
+  const filtered = CURRENCIES.filter(c =>
+    c.code.toLowerCase().includes(q.toLowerCase()) ||
+    c.name.toLowerCase().includes(q.toLowerCase())
+  );
+  list.innerHTML = filtered.map(c =>
+    `<div class="curr-opt${c.code===curCurrency.code?' on':''}" onclick="setCurrency('${c.code}')">
+      <span>${c.name}</span>
+      <span class="curr-code">${c.code}</span>
+    </div>`
+  ).join('');
+}
+
+function filterCurr(q){ renderCurrList(q); }
+
+function setCurrency(code){
+  curCurrency = CURRENCIES.find(c => c.code === code) || CURRENCIES[0];
+  document.getElementById('curr-symbol').textContent = curCurrency.symbol;
+  document.getElementById('curr-code-lbl').textContent = curCurrency.code;
+  document.getElementById('curr-wrap').classList.remove('open');
+  document.getElementById('curr-search').value = '';
+  renderCurrList('');
+  // Tüm fiyatları güncelle
+  updateAllPrices();
+  toast(`${curCurrency.code} seçildi — fiyatlar güncellendi`);
+}
+
+function convertPrice(usdPrice){
+  const converted = (usdPrice * curCurrency.rate).toFixed(curCurrency.rate >= 100 ? 0 : 2);
+  return curCurrency.symbol + converted;
+}
+
+function updateAllPrices(){
+  // Plan kartlarını yeniden render et
+  renderFeat();
+  renderPlans(window.curPlanFilter ? PLANS.filter(p => p.r === window.curPlanFilter) : PLANS);
+}
+
+/* ══════════════════════════════════════════════════
+   PRIMEMONEY LOYALTY SYSTEM
+══════════════════════════════════════════════════ */
+const LOYALTY_TIERS = [
+  {id:'traveler', name:'Traveler', icon:'✈️', cashback:5, minSpend:0, maxSpend:20, color:'#8097A8'},
+  {id:'silver',   name:'Silver',  icon:'🥈', cashback:6, minSpend:20, maxSpend:70, color:'#C0C0C0'},
+  {id:'gold',     name:'Gold',    icon:'🥇', cashback:7, minSpend:70, maxSpend:200, color:'#FFD700'},
+  {id:'platinum', name:'Platinum',icon:'💎', cashback:10, minSpend:200, maxSpend:Infinity, color:'#b5b5f5'},
+];
+
+let primeMoneyBalance = 0;
+let totalSpent = 0;
+
+function getUserTier(){
+  for(let i = LOYALTY_TIERS.length-1; i >= 0; i--){
+    if(totalSpent >= LOYALTY_TIERS[i].minSpend) return LOYALTY_TIERS[i];
+  }
+  return LOYALTY_TIERS[0];
+}
+
+function renderLoyalty(){
+  const tiersEl = document.getElementById('loyalty-tiers');
+  if(!tiersEl) return;
+  const tier = getUserTier();
+
+  tiersEl.innerHTML = LOYALTY_TIERS.map(t => `
+    <div class="tier-card tier-${t.id}${t.id===tier.id?' active':''}">
+      ${t.id===tier.id?'<div style="position:absolute;top:8px;right:8px;font-size:9px;font-weight:800;background:var(--a);color:var(--p);padding:2px 8px;border-radius:99px">CURRENT</div>':''}
+      <div class="tier-icon">${t.icon}</div>
+      <div class="tier-name">${t.name}</div>
+      <div class="tier-cashback">${t.cashback}%</div>
+      <div class="tier-req">${t.minSpend===0?'Starting tier':'$'+t.minSpend+' total spend'}</div>
+    </div>`).join('');
+
+  // User card
+  const bal = document.getElementById('pm-balance');
+  const tierLabel = document.getElementById('pm-tier-label');
+  const levelEl = document.getElementById('pm-level');
+  const nextEl = document.getElementById('pm-next-level');
+  const prog = document.getElementById('pm-progress');
+  const progLabels = document.getElementById('pm-progress-labels');
+
+  if(bal) bal.textContent = convertPrice(primeMoneyBalance);
+  if(tierLabel) tierLabel.textContent = `${tier.name} — ${tier.cashback}% cashback`;
+  if(levelEl) levelEl.textContent = tier.name;
+
+  const nextTier = LOYALTY_TIERS[LOYALTY_TIERS.indexOf(tier)+1];
+  if(nextTier && nextEl){
+    const remaining = nextTier.minSpend - totalSpent;
+    nextEl.textContent = `$${remaining.toFixed(0)} more to ${nextTier.name}`;
+    const pct = Math.round(((totalSpent - tier.minSpend) / (nextTier.minSpend - tier.minSpend)) * 100);
+    if(prog) prog.style.width = Math.min(100, Math.max(0, pct)) + '%';
+    if(progLabels) progLabels.innerHTML = `<span>${tier.name} ($${tier.minSpend})</span><span>${nextTier.name} ($${nextTier.minSpend})</span>`;
+  } else if(nextEl){
+    nextEl.textContent = '🏆 Maximum tier reached!';
+    if(prog) prog.style.width = '100%';
+  }
+}
+
+function addPrimeMoney(orderAmount){
+  const tier = getUserTier();
+  const earned = orderAmount * (tier.cashback / 100);
+  primeMoneyBalance += earned;
+  totalSpent += orderAmount;
+  renderLoyalty();
+  return earned;
+}
+
+/* ══════════════════════════════════════════════════
+   REFERRAL SYSTEM
+══════════════════════════════════════════════════ */
+function generateRefCode(){
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = 'PRIME-';
+  for(let i=0; i<6; i++) code += chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+
+const myRefCode = generateRefCode();
+
+function initReferral(){
+  const el = document.getElementById('ref-code');
+  if(el) el.textContent = myRefCode;
+}
+
+function copyRefCode(){
+  navigator.clipboard.writeText(myRefCode).catch(()=>{});
+  toast('✓ Referral code copied: ' + myRefCode);
+}
+
+function shareRef(method){
+  const msg = `Get 15% off your first eSIM with PrimeSIM! Use my code: ${myRefCode} → https://primesim.co`;
+  const urls = {
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(msg)}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}`,
+    email: `mailto:?subject=Try PrimeSIM!&body=${encodeURIComponent(msg)}`,
+    copy: null
+  };
+  if(method === 'copy'){
+    navigator.clipboard.writeText(`https://primesim.co?ref=${myRefCode}`).catch(()=>{});
+    toast('✓ Referral link copied!');
+  } else if(urls[method]){
+    window.open(urls[method], '_blank');
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   SETUP GUIDE
+══════════════════════════════════════════════════ */
+function switchSetup(platform){
+  document.getElementById('setup-ios').style.display = platform==='ios' ? 'block' : 'none';
+  document.getElementById('setup-android').style.display = platform==='android' ? 'block' : 'none';
+  document.getElementById('setup-ios-btn').style.background = platform==='ios' ? 'var(--p)' : 'white';
+  document.getElementById('setup-ios-btn').style.color = platform==='ios' ? 'white' : 'var(--ink)';
+  document.getElementById('setup-android-btn').style.background = platform==='android' ? 'var(--p)' : 'white';
+  document.getElementById('setup-android-btn').style.color = platform==='android' ? 'white' : 'var(--ink)';
+}
+
+function renderSetupGuide(){
+  const iosQR = [
+    {text:'<strong>Settings</strong> → <strong>Cellular</strong> (or Mobile Data) → <strong>Add eSIM</strong>'},
+    {text:'Tap <strong>"Use QR Code"</strong>'},
+    {text:'Scan the QR code shown on your PrimeSIM order page'},
+    {text:'Follow the on-screen prompts to complete installation'},
+    {text:'When asked, set PrimeSIM as your data SIM for travel'},
+  ];
+  const iosPush = [
+    {text:'After purchase, tap <strong>"Install eSIM"</strong> button on the success page'},
+    {text:'Your iPhone will prompt you to add the eSIM automatically'},
+    {text:'Tap <strong>"Add Cellular Plan"</span> — iOS 17.4+ required'},
+    {text:'Done! Your eSIM activates when you arrive at your destination'},
+  ];
+  const android = [
+    {text:'<strong>Settings</strong> → <strong>Connections</strong> → <strong>SIM Manager</strong>'},
+    {text:'Tap <strong>"Add eSIM"</strong> or <strong>"Add carrier"</strong>'},
+    {text:'Select <strong>"Scan QR code"</strong> and scan your PrimeSIM QR'},
+    {text:'Follow prompts — tap <strong>"Activate"</strong> when asked'},
+    {text:'Set PrimeSIM as mobile data for travel'},
+  ];
+
+  const renderSteps = (steps, elId) => {
+    const el = document.getElementById(elId);
+    if(!el) return;
+    el.innerHTML = steps.map((s,i) => `
+      <div class="setup-step">
+        <div class="step-num">${i+1}</div>
+        <div class="step-text">${s.text}</div>
+      </div>`).join('');
+  };
+
+  renderSteps(iosQR, 'setup-ios-qr-steps');
+  renderSteps(iosPush, 'setup-ios-push-steps');
+  renderSteps(android, 'setup-android-steps');
+}
+
+/* ══════════════════════════════════════════════════
+   HELP CENTER
+══════════════════════════════════════════════════ */
+const HELP_DATA = {
+  topics: [
+    {icon:'📱',title:'Getting Started',count:'12 articles',key:'start'},
+    {icon:'💳',title:'Payments & Billing',count:'8 articles',key:'pay'},
+    {icon:'📶',title:'eSIM Activation',count:'10 articles',key:'activate'},
+    {icon:'🔧',title:'Troubleshooting',count:'15 articles',key:'trouble'},
+    {icon:'🏆',title:'Loyalty & Rewards',count:'5 articles',key:'loyalty'},
+    {icon:'📞',title:'Contact Support',count:'3 articles',key:'support'},
+  ],
+  articles: [
+    {q:'What is an eSIM?', a:'An eSIM (embedded SIM) is a digital SIM card built into your device. Unlike physical SIM cards, you can activate data plans digitally — no card insertion needed.', topic:'start'},
+    {q:'Is my device compatible with eSIM?', a:'Most recent smartphones support eSIM: iPhone XS and later, Google Pixel 3 and later, Samsung Galaxy S20 and later. Your device must also be unlocked and not jailbroken/rooted.', topic:'start'},
+    {q:'How do I install my eSIM?', a:'After purchase, you\'ll receive a QR code. On iOS: Settings → Cellular → Add eSIM → Use QR Code. On Android: Settings → Connections → SIM Manager → Add eSIM → Scan QR code.', topic:'activate'},
+    {q:'When does my eSIM activate?', a:'Most eSIMs activate automatically when your device connects to a supported network at your destination. Some activate immediately after installation.', topic:'activate'},
+    {q:'Can I use my eSIM in multiple countries?', a:'Regional and Global plans cover multiple countries. Local plans cover only one country. Check the plan details to see coverage before purchasing.', topic:'activate'},
+    {q:'What payment methods are accepted?', a:'We accept all major credit/debit cards via Stripe, Apple Pay, Google Pay, PayPal, and cryptocurrency.', topic:'pay'},
+    {q:'Can I get a refund?', a:'Yes! We offer a 30-day refund policy for unused eSIMs. If your eSIM has not been installed and activated, contact support for a full refund.', topic:'pay'},
+    {q:'My eSIM is not working — what do I do?', a:'1) Check that your device is eSIM compatible and unlocked. 2) Make sure mobile data is enabled for PrimeSIM. 3) Try toggling airplane mode. 4) If issues persist, contact our AI support.', topic:'trouble'},
+    {q:'What is PrimeMoney?', a:'PrimeMoney is our loyalty rewards system. You earn between 5-10% cashback on every purchase, depending on your tier (Traveler, Silver, Gold, Platinum). Use it to pay for future eSIMs.', topic:'loyalty'},
+    {q:'How does the referral program work?', a:'Share your unique referral code. When a friend makes their first purchase using your code, you earn $3 PrimeMoney and they receive 15% off their first order.', topic:'loyalty'},
+  ]
+};
+
+function renderHelp(){
+  const topicsEl = document.getElementById('help-topics');
+  const articlesEl = document.getElementById('help-articles');
+  if(!topicsEl || !articlesEl) return;
+
+  topicsEl.innerHTML = HELP_DATA.topics.map(t => `
+    <div class="help-topic" onclick="filterHelpByTopic('${t.key}')">
+      <div class="help-topic-icon">${t.icon}</div>
+      <div class="help-topic-title">${t.title}</div>
+      <div class="help-topic-count">${t.count}</div>
+    </div>`).join('');
+
+  renderHelpArticles(HELP_DATA.articles);
+}
+
+function renderHelpArticles(articles){
+  const el = document.getElementById('help-articles');
+  if(!el) return;
+  if(!articles.length){
+    el.innerHTML = '<div style="text-align:center;padding:28px;color:var(--ink3)">No results found</div>';
+    return;
+  }
+  el.innerHTML = articles.map((a,i) => `
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFAQ(${i})">
+        <span>${a.q}</span>
+        <span id="faq-arrow-${i}" style="font-size:12px;transition:transform .2s">▼</span>
+      </div>
+      <div class="faq-a" id="faq-a-${i}">${a.a}</div>
+    </div>`).join('');
+}
+
+function toggleFAQ(i){
+  const el = document.getElementById('faq-a-'+i);
+  const arr = document.getElementById('faq-arrow-'+i);
+  if(!el) return;
+  const open = el.classList.toggle('open');
+  if(arr) arr.style.transform = open ? 'rotate(180deg)' : '';
+}
+
+function filterHelp(q){
+  if(!q){ renderHelpArticles(HELP_DATA.articles); return; }
+  const filtered = HELP_DATA.articles.filter(a =>
+    a.q.toLowerCase().includes(q.toLowerCase()) ||
+    a.a.toLowerCase().includes(q.toLowerCase())
+  );
+  renderHelpArticles(filtered);
+}
+
+function filterHelpByTopic(key){
+  const filtered = HELP_DATA.articles.filter(a => a.topic === key);
+  renderHelpArticles(filtered);
+}
+
+/* ══════════════════════════════════════════════════
+   NAV UPDATES — Help & Loyalty bağlantıları
+══════════════════════════════════════════════════ */
+function addNavItems(){
+  const navLinks = document.querySelector('.nav-links');
+  if(!navLinks || navLinks.querySelector('[data-page="loyalty"]')) return;
+
+  // Loyalty button
+  const loyaltyBtn = document.createElement('button');
+  loyaltyBtn.className = 'nav-btn';
+  loyaltyBtn.setAttribute('data-page', 'loyalty');
+  loyaltyBtn.style.position = 'relative';
+  loyaltyBtn.innerHTML = `<span class="l-tr">PrimeMoney</span><span class="l-en">PrimeMoney</span><span class="l-de">PrimeMoney</span><span class="l-fr">PrimeMoney</span><span class="l-es">PrimeMoney</span><div class="loyalty-dot"></div>`;
+  loyaltyBtn.onclick = () => goTo('loyalty');
+  navLinks.appendChild(loyaltyBtn);
+
+  // Help button
+  const helpBtn = document.createElement('button');
+  helpBtn.className = 'nav-btn';
+  helpBtn.setAttribute('data-page', 'help');
+  helpBtn.innerHTML = `<span class="l-tr">Yardım</span><span class="l-en">Help</span><span class="l-de">Hilfe</span><span class="l-fr">Aide</span><span class="l-es">Ayuda</span>`;
+  helpBtn.onclick = () => goTo('help');
+  navLinks.appendChild(helpBtn);
+}
+
+/* ══════════════════════════════════════════════════
+   BOTTOM NAV — Loyalty ikonu ekle
+══════════════════════════════════════════════════ */
+function addBottomNavLoyalty(){
+  const nav = document.querySelector('.bot-nav');
+  if(!nav || document.getElementById('bn-loyalty')) return;
+  const btn = document.createElement('button');
+  btn.className = 'bn-btn';
+  btn.id = 'bn-loyalty';
+  btn.innerHTML = `<span class="bn-icon" style="position:relative">💎<div class="loyalty-dot" style="position:absolute;top:-2px;right:-2px;width:6px;height:6px;background:var(--o);border-radius:50%;border:1.5px solid white"></div></span><span><span class="l-tr">Ödül</span><span class="l-en">Rewards</span><span class="l-de">Prämien</span><span class="l-fr">Récompenses</span><span class="l-es">Recompensas</span></span>`;
+  btn.onclick = () => goTo('loyalty');
+  nav.appendChild(btn);
+}
+
+/* ══════════════════════════════════════════════════
+   CHECKOUT ENHANCEMENT — PrimeMoney + gerçek form
+══════════════════════════════════════════════════ */
+function enhanceCheckout(){
+  // PrimeMoney redemption toggle checkout'a ekle
+  const coLeft = document.querySelector('.checkout-left');
+  if(!coLeft || document.getElementById('pm-redeem-section')) return;
+
+  const pmSection = document.createElement('div');
+  pmSection.id = 'pm-redeem-section';
+  pmSection.style.cssText = 'background:var(--a3);border:1.5px solid rgba(0,200,150,.3);border-radius:10px;padding:12px 14px;margin-top:12px;display:flex;align-items:center;justify-content:space-between';
+  pmSection.innerHTML = `
+    <div>
+      <div style="font-size:12px;font-weight:700;color:var(--p)">💰 PrimeMoney Balance: <span id="pm-checkout-bal">$0.00</span></div>
+      <div style="font-size:10px;color:var(--ink3);margin-top:2px" id="pm-tier-checkout">Traveler — 5% cashback on this order</div>
+    </div>
+    <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+      <input type="checkbox" id="use-primemoney" onchange="togglePrimeMoney(this.checked)" style="accent-color:var(--a);width:16px;height:16px">
+      <span style="font-size:12px;font-weight:700;color:var(--p)">
+        <span class="l-tr">Kullan</span><span class="l-en">Use</span><span class="l-de">Verwenden</span><span class="l-fr">Utiliser</span><span class="l-es">Usar</span>
+      </span>
+    </label>`;
+
+  const btn = coLeft.querySelector('button.btn.btn-accent');
+  if(btn) coLeft.insertBefore(pmSection, btn);
+}
+
+function togglePrimeMoney(use){
+  if(!selPlan) return;
+  const discount = use ? Math.min(primeMoneyBalance, selPlan.p * 0.5) : 0; // max %50 PrimeMoney
+  const final = Math.max(0, selPlan.p - discount).toFixed(2);
+  document.getElementById('pay-amount').textContent = convertPrice(parseFloat(final));
+  document.getElementById('order-total').textContent = convertPrice(parseFloat(final));
+  if(use && discount > 0) toast(`✓ ${convertPrice(discount)} PrimeMoney applied!`);
+}
+
+function updateCheckoutPM(){
+  const bal = document.getElementById('pm-checkout-bal');
+  const tierEl = document.getElementById('pm-tier-checkout');
+  if(bal) bal.textContent = convertPrice(primeMoneyBalance);
+  const tier = getUserTier();
+  if(tierEl) tierEl.textContent = `${tier.name} — ${tier.cashback}% cashback on this order`;
+}
+
+/* ══════════════════════════════════════════════════
+   ENHANCED ORDER COMPLETE — PrimeMoney earn
+══════════════════════════════════════════════════ */
+const _origCompleteOrder = typeof completeOrder !== 'undefined' ? completeOrder : null;
+function completeOrder(){
+  if(!selPlan) return;
+  
+  // Earn PrimeMoney
+  const earned = addPrimeMoney(selPlan.p);
+  
+  // Original logic
+  document.getElementById('suc-plan').textContent = selPlan.f + ' ' + selPlan.c + ' — ' + selPlan.d + ' / ' + selPlan.t + ' Days';
+  document.getElementById('suc-lpa').textContent = 'LPA:1$smdp.esimaccess.com$PRIME-' + selPlan.iccid.slice(-8);
+  
+  if(typeof extraE !== 'undefined'){
+    extraE.unshift({f:selPlan.f,c:selPlan.c,iccid:selPlan.iccid,d:selPlan.d,used:0,t:selPlan.t,left:selPlan.t,st:'active',pv:selPlan.pv});
+    if(typeof extraTx !== 'undefined') extraTx.unshift({type:'buy',name:selPlan.f+' '+selPlan.c+' '+selPlan.d,date:'Just now',amt:'-$'+selPlan.p+'.00'});
+    if(typeof renderMyESIMs !== 'undefined') renderMyESIMs();
+    if(typeof renderTxs !== 'undefined') renderTxs();
+  }
+  
+  goTo('success');
+  toast(`✓ Payment successful! +${convertPrice(earned)} PrimeMoney earned 💎`);
+}
+
+/* ══════════════════════════════════════════════════
+   PLAN CARD PRICE UPDATE — Multi-currency
+══════════════════════════════════════════════════ */
+const _origPCard = typeof pCard !== 'undefined' ? pCard : null;
+function pCard(p){
+  return`<div class="plan-card${p.feat?' featured':''}" onclick="buyPlan(${p.id})">
+    ${p.feat?'<div class="plan-badge">Top Pick</div>':''}
+    <div class="plan-flag">${p.f}</div>
+    <div class="plan-country">${p.c}</div>
+    <div class="plan-provider">📡 ${p.pv}</div>
+    <div class="plan-chips">
+      <span class="chip chip-data">📶 ${p.d}</span>
+      <span class="chip chip-days">⏱ ${p.t}d</span>
+      <span class="chip chip-speed">⚡${p.s}</span>
+    </div>
+    <div class="plan-footer">
+      <div class="plan-price">${convertPrice(p.p)}<span> ${curCurrency.code}</span></div>
+      <button class="buy-btn" onclick="event.stopPropagation();buyPlan(${p.id})">
+        <span class="l-tr">Satın Al</span><span class="l-en">Buy</span><span class="l-de">Kaufen</span><span class="l-fr">Acheter</span><span class="l-es">Comprar</span>
+      </button>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════
+   INIT ALL NEW FEATURES
+══════════════════════════════════════════════════ */
+function initNewFeatures(){
+  initCurrencySelector();
+  addNavItems();
+  addBottomNavLoyalty();
+  renderLoyalty();
+  renderSetupGuide();
+  renderHelp();
+  initReferral();
+  enhanceCheckout();
+
+  // go fonksiyonunu genişlet - yeni ekranlar
+  const _origGo = goTo;
+  const __origGo = goTo; goTo = function(s){
+    __origGo(s);
+    if(s === 'checkout'){ setTimeout(enhanceCheckout, 100); updateCheckoutPM(); }
+    if(s === 'loyalty'){ renderLoyalty(); }
+    if(s === 'setup'){ renderSetupGuide(); }
+    if(s === 'help'){ renderHelp(); }
+  };
+
+  // Setup butonunu eSIM'lerim sayfasına ekle
+  const myEsimsWrap = document.querySelector('.my-esims-wrap');
+  if(myEsimsWrap && !document.getElementById('setup-link-btn')){
+    const setupBtn = document.createElement('div');
+    setupBtn.style.cssText = 'margin-top:12px;background:var(--a3);border:1.5px solid rgba(0,200,150,.3);border-radius:12px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between';
+    setupBtn.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:20px">📲</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--p)">
+            <span class="l-tr">eSIM Nasıl Kurulur?</span><span class="l-en">How to Install eSIM?</span><span class="l-de">Wie installiere ich eSIM?</span><span class="l-fr">Comment installer eSIM?</span><span class="l-es">¿Cómo instalar eSIM?</span>
+          </div>
+          <div style="font-size:11px;color:var(--ink3)">iOS · Android · Step by step guide</div>
+        </div>
+      </div>
+      <button id="setup-link-btn" class="btn btn-ghost btn-sm" onclick="goTo('setup')">
+        <span class="l-tr">Rehbere Git →</span><span class="l-en">View Guide →</span><span class="l-de">Anleitung →</span><span class="l-fr">Voir le guide →</span><span class="l-es">Ver guía →</span>
+      </button>`;
+    myEsimsWrap.appendChild(setupBtn);
+  }
+}
+
+// DOM hazır olunca çalıştır
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', initNewFeatures);
+} else {
+  setTimeout(initNewFeatures, 100);
+}
+</script>
+
+<script>
+// goTo override
+(function(){
+var orig = window.goTo || function(){};
+window.goTo = function(s){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('on'));
+  var sc=document.getElementById('sc-'+s);
+  if(sc) sc.classList.add('on');
+  document.querySelectorAll('.bn-btn').forEach(b=>b.classList.remove('on'));
+  var bn=document.getElementById('bn-'+s);if(bn)bn.classList.add('on');
+  document.querySelectorAll('.nav-btn').forEach(a=>a.classList.toggle('on',a.getAttribute('data-page')===s));
+  window.scrollTo(0,0);
+  if(s==='loyalty'&&typeof renderLoyalty==='function')renderLoyalty();
+  if(s==='help'&&typeof renderHelp==='function')renderHelp();
+  if(s==='setup'&&typeof renderSetupGuide==='function')renderSetupGuide();
+  if(s==='checkout'){setTimeout(function(){typeof enhanceCheckout==='function'&&enhanceCheckout();typeof updateCheckoutPM==='function'&&updateCheckoutPM();},100);}
+};
+})();
 </script>
 </body>
 </html>
